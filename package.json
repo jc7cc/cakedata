@@ -1,0 +1,26 @@
+{
+  "name": "cakedata",
+  "version": "0.0.1",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jc7cc/cakedata.git"
+  },
+  "author": "jc7cc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jc7cc/cakedata/issues"
+  },
+  "homepage": "https://github.com/jc7cc/cakedata#readme",
+  "dependencies": {
+    "@binance/connector": "^2.0.0-rc.4",
+    "dotenv": "^16.0.3",
+    "pg": "^8.8.0",
+    "web3": "^1.8.1"
+  }
+}
