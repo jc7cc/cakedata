@@ -1,3 +1,3 @@
-import { web3 } from "./web3.js";
+import { readWrite } from "./web3.js";
 
-web3.eth.getBlockNumber().then(console.log);
+readWrite(58293).then(console.log);
