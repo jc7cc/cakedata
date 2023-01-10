@@ -102,9 +102,16 @@ async function kline(startTime) {
 export async function getData(epoch) {
   const round = await getRound(epoch);
   if (round.status === status.success) {
+    if (round.closeOracleId === "0") {
+      return {
+        status: status.fail,
+      };
+    }
     const oraclePrice = await getOraclePrice(round.closeOracleId);
+    if (oraclePrice.updatedAt === undefined) console.log(round);
     const binancePrice = await kline(oraclePrice.updatedAt);
     return {
+      status: status.success,
       round: round,
       oraclePrice: oraclePrice,
       binancePrice: binancePrice,
@@ -114,5 +121,7 @@ export async function getData(epoch) {
 
 export async function readWrite(epoch) {
   const info = await getData(epoch);
-  write(info);
+  if (info.status === status.success) {
+    write(info);
+  }
 }
