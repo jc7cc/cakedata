@@ -52,7 +52,9 @@ async function getRound(epoch) {
 async function getOraclePrice(oracleRound) {
   try {
     let close = await oracle.methods.getRoundData(oracleRound).call();
-    let prev = await oracle.methods.getRoundData(String(BigInt(oracleRound)))
+    let prev = await oracle.methods.getRoundData(
+      String(BigInt(oracleRound) - 1n),
+    )
       .call();
     close = ignoreNumKey(close);
     prev = ignoreNumKey(prev);
@@ -112,7 +114,6 @@ export async function getData(epoch) {
       };
     }
     const oraclePrice = await getOraclePrice(round.closeOracleId);
-    console.log(oraclePrice);
     if (oraclePrice.close.updatedAt === undefined) console.log(round);
     const binancePrice = await kline(oraclePrice.close.updatedAt);
     return {
