@@ -67,7 +67,7 @@ async function getOraclePrice(oracleRound) {
 
 let option;
 
-if (process.env.argv[2] === "test") {
+if (process.argv[2] === "test") {
   option = { proxy: "http://127.0.0.1:7890" };
 }
 
