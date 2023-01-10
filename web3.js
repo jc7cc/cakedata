@@ -65,13 +65,19 @@ async function getOraclePrice(oracleRound) {
   }
 }
 
+let option;
+
+if (process.env.argv[2] === "test") {
+  option = { proxy: "http://127.0.0.1:7890" };
+}
+
 async function kline(startTime) {
   const startTimeMs = startTime * 1000;
   const url =
     `https://api.binance.com/api/v3/klines?symbol=CAKEUSDT&interval=1m&startTime=${
       startTimeMs - 2 * 60 * 1000
     }&limit=5`;
-  const resp = await needle("get", url, { proxy: "http://127.0.0.1:7890" });
+  const resp = await needle("get", url, option);
 
   const data = resp.body;
   for (const elem of data) {
