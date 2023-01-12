@@ -2,9 +2,10 @@ import Web3 from "web3";
 import { config } from "./config.js";
 import { oracleABI } from "./abi/oracleABI.js";
 import { cakePredictABI } from "./abi/cakePridictABI.js";
-import { status } from "./utils.js";
+import { delay, status } from "./utils.js";
 import needle from "needle";
 import { write } from "./db.js";
+import { getCakePrice } from "./binance.js";
 
 let endpoint;
 if (process.argv[2] === "test") {
@@ -33,21 +34,21 @@ function ignoreNumKey(obj) {
   return obj;
 }
 
-async function getRound(epoch) {
-  try {
-    let round = await cakePredict.methods.rounds(epoch).call();
-    round = ignoreNumKey(round);
-    return {
-      status: status.success,
-      ...round,
-    };
-  } catch (err) {
-    return {
-      status: status.fail,
-      err: err,
-    };
-  }
-}
+// async function getRound(epoch) {
+//   try {
+//     let round = await cakePredict.methods.rounds(epoch).call();
+//     round = ignoreNumKey(round);
+//     return {
+//       status: status.success,
+//       ...round,
+//     };
+//   } catch (err) {
+//     return {
+//       status: status.fail,
+//       err: err,
+//     };
+//   }
+// }
 
 async function getOraclePrice(oracleRound) {
   try {
@@ -130,4 +131,54 @@ export async function readWrite(epoch) {
   if (info.status === status.success) {
     write(info);
   }
+}
+
+async function nextRoundTimeRange() {
+  const round = await oracle.methods.latestRoundData().call();
+  return {
+    roundId: round.roundId,
+    updatedAt: round.updatedAt,
+    nextRoundRange: [+round.updatedAt + 85, +round.updatedAt + 95],
+  };
+}
+
+async function getRoundData(roundId) {
+  while (true) {
+    const curRound = await oracle.methods.getRoundData(roundId).call();
+    if (curRound.updatedAt === "0") {
+      await delay(0.5);
+      continue;
+    }
+    return ignoreNumKey(curRound);
+  }
+}
+
+async function getPrice(lastRound) {
+  const priceArr = [];
+  let time = 0;
+  do {
+    const cexPrice = await getCakePrice();
+    time = cexPrice.timestamp;
+    priceArr.push(cexPrice);
+    await delay(0.5);
+  } while (Math.floor(time / 1000) < lastRound.nextRoundRange[1]);
+
+  const roundId = (BigInt(lastRound.roundId) + 1n).toString();
+  const curRound = await getRoundData(roundId);
+  return {
+    round: curRound,
+    binancePrice: priceArr,
+  };
+}
+
+export async function getRound() {
+  const measuredTime = await nextRoundTimeRange();
+  const now = Math.floor(+new Date() / 1000);
+  console.log(measuredTime);
+  setTimeout(async () => {
+    const res = await getPrice(measuredTime);
+    write(res);
+    console.log(res);
+    getRound();
+  }, (measuredTime.nextRoundRange[0] - now) * 1000);
 }
